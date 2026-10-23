@@ -1,5 +1,7 @@
 """Reglas de negocio del inventario (independientes de la capa web)."""
 
+import csv
+import io
 import re
 
 from .models import Categoria, Movimiento, Producto, db
@@ -116,6 +118,19 @@ def buscar_productos(texto=""):
             db.or_(Producto.nombre.ilike(patron), Producto.sku.ilike(patron))
         )
     return consulta.order_by(Producto.nombre).all()
+
+
+CSV_COLUMNAS = ["sku", "nombre", "categoria", "precio", "stock", "stock_minimo", "valor_total"]
+
+
+def exportar_csv(productos):
+    """Devuelve el inventario en CSV (separador ';' para que Excel en español lo abra bien)."""
+    salida = io.StringIO()
+    escritor = csv.DictWriter(salida, fieldnames=CSV_COLUMNAS, delimiter=";", extrasaction="ignore")
+    escritor.writeheader()
+    for producto in productos:
+        escritor.writerow(producto.to_dict())
+    return "﻿" + salida.getvalue()
 
 
 def _validar_nombre(nombre):
