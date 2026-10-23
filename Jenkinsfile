@@ -148,10 +148,12 @@ pipeline {
             steps {
                 // SonarQube Community no analiza ramas: un proyecto por rama
                 // (stockflow-main, stockflow-develop...) para que no se mezclen.
+                // flock: si dos ramas llegan a la vez, los análisis se hacen en cola
+                // (el escáner comparte su cache ~/.sonar y no admite ejecuciones simultáneas).
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                     sh '''
                         RAMA_SONAR=$(echo "$BRANCH_NAME" | tr '/' '_')
-                        .venv/bin/pysonar \
+                        flock "$CI_CACHE/sonar.lock" .venv/bin/pysonar \
                           --sonar-host-url="$SONAR_HOST_URL" \
                           --sonar-token="$SONAR_TOKEN" \
                           --sonar-project-version="$BUILD_NUMBER" \
