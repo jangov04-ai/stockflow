@@ -3,7 +3,10 @@
 {% block contenido %}
 <div class="cabecera">
   <h1>Productos</h1>
-  <a class="boton" id="btn-nuevo" href="{{ url_for('web.nuevo_producto') }}">+ Nuevo producto</a>
+  <div class="botones">
+    <a id="btn-exportar" href="{{ url_for('web.exportar_productos', q=q) }}">⬇ Exportar CSV</a>
+    <a class="boton" id="btn-nuevo" href="{{ url_for('web.nuevo_producto') }}">+ Nuevo producto</a>
+  </div>
 </div>
 
 <form method="get" class="buscador">
