@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Panel{% endblock %}
+{% block contenido %}
+<h1>Panel de inventario</h1>
+
+<section class="tarjetas">
+  <div class="tarjeta"><span>Productos</span><strong id="kpi-productos">{{ resumen.total_productos }}</strong></div>
+  <div class="tarjeta"><span>Unidades en stock</span><strong id="kpi-unidades">{{ resumen.unidades_totales }}</strong></div>
+  <div class="tarjeta"><span>Valor del inventario</span><strong id="kpi-valor">${{ "%.2f"|format(resumen.valor_inventario) }}</strong></div>
+  <div class="tarjeta {% if resumen.productos_stock_bajo %}alerta{% endif %}"><span>Con stock bajo</span><strong id="kpi-stock-bajo">{{ resumen.productos_stock_bajo }}</strong></div>
+</section>
+
+<div class="columnas">
+  <section>
+    <h2>⚠️ Stock bajo</h2>
+    {% if stock_bajo %}
+    <table id="tabla-stock-bajo">
+      <thead><tr><th>SKU</th><th>Producto</th><th>Stock</th><th>Mínimo</th></tr></thead>
+      <tbody>
+      {% for p in stock_bajo %}
+        <tr><td>{{ p.sku }}</td><td>{{ p.nombre }}</td><td class="num">{{ p.stock }}</td><td class="num">{{ p.stock_minimo }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="vacio">Todo el inventario está por encima del mínimo.</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>Últimos movimientos</h2>
+    {% if ultimos %}
+    <ul class="movimientos">
+      {% for m in ultimos %}
+        <li class="mov-{{ m.tipo }}">{{ "+" if m.tipo == "entrada" else "−" }}{{ m.cantidad }} · {{ m.producto.nombre }} <small>{{ m.motivo }}</small></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="vacio">Aún no hay movimientos.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

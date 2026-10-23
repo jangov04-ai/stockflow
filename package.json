@@ -1,0 +1,14 @@
+{
+  "name": "stockflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "StockFlow - herramientas de calidad para el frontend (ESLint)",
+  "scripts": {
+    "lint:js": "eslint app/static/js"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.13.0",
+    "eslint": "9.13.0",
+    "globals": "15.11.0"
+  }
+}

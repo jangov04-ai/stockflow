@@ -1,0 +1,13 @@
+workflow-aggregator
+workflow-multibranch
+pipeline-groovy-lib
+pipeline-stage-view
+pipeline-graph-view
+git
+credentials
+credentials-binding
+configuration-as-code
+job-dsl
+mailer
+junit
+timestamper

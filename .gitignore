@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.db
+instance/
+reports/
+dist/
+.coverage
+htmlcov/
+.pytest_cache/
+.scannerwork/
+node_modules/
+infra/jenkins/.env

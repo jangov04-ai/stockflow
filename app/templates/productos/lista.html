@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titulo %}Productos{% endblock %}
+{% block contenido %}
+<div class="cabecera">
+  <h1>Productos</h1>
+  <a class="boton" id="btn-nuevo" href="{{ url_for('web.nuevo_producto') }}">+ Nuevo producto</a>
+</div>
+
+<form method="get" class="buscador">
+  <input type="search" name="q" id="buscar" value="{{ q }}" placeholder="Buscar por nombre o SKU">
+  <button type="submit">Buscar</button>
+</form>
+
+{% if productos %}
+<table id="tabla-productos" data-filtrable>
+  <thead>
+    <tr><th>SKU</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Valor</th><th></th></tr>
+  </thead>
+  <tbody>
+  {% for p in productos %}
+    <tr class="{% if p.stock_bajo %}fila-alerta{% endif %}" data-sku="{{ p.sku }}">
+      <td>{{ p.sku }}</td>
+      <td>{{ p.nombre }}</td>
+      <td>{{ p.categoria.nombre if p.categoria else "—" }}</td>
+      <td class="num">${{ "%.2f"|format(p.precio) }}</td>
+      <td class="num">{{ p.stock }}</td>
+      <td class="num">${{ "%.2f"|format(p.valor_total) }}</td>
+      <td class="acciones">
+        <a href="{{ url_for('web.editar_producto', producto_id=p.id) }}">Editar</a>
+        <form method="post" action="{{ url_for('web.eliminar_producto', producto_id=p.id) }}" data-confirmar="¿Eliminar {{ p.sku }}?">
+          <button type="submit" class="enlace-peligro">Eliminar</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="vacio" id="sin-productos">No hay productos{% if q %} que coincidan con «{{ q }}»{% endif %}.</p>
+{% endif %}
+{% endblock %}

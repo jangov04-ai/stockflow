@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}StockFlow{% endblock %} · StockFlow</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <header class="barra">
+    <a class="marca" href="{{ url_for('web.dashboard') }}">📦 StockFlow</a>
+    <nav>
+      <a href="{{ url_for('web.dashboard') }}" id="nav-panel">Panel</a>
+      <a href="{{ url_for('web.lista_productos') }}" id="nav-productos">Productos</a>
+      <a href="{{ url_for('web.movimientos') }}" id="nav-movimientos">Movimientos</a>
+      <a href="{{ url_for('web.categorias') }}" id="nav-categorias">Categorías</a>
+    </nav>
+  </header>
+
+  <main class="contenido">
+    {% with mensajes = get_flashed_messages(with_categories=true) %}
+      {% for categoria, mensaje in mensajes %}
+        <div class="aviso aviso-{{ categoria }}" role="alert">{{ mensaje }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block contenido %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

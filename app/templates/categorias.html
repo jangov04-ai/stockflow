@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block titulo %}Categorías{% endblock %}
+{% block contenido %}
+<h1>Categorías</h1>
+{% if categorias %}
+<table id="tabla-categorias">
+  <thead><tr><th>Categoría</th><th>Productos</th></tr></thead>
+  <tbody>
+  {% for c in categorias %}
+    <tr><td>{{ c.nombre }}</td><td class="num">{{ c.productos|length }}</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="vacio">Las categorías se crean al asignarlas a un producto.</p>
+{% endif %}
+{% endblock %}

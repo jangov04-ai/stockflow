@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Movimientos{% endblock %}
+{% block contenido %}
+<h1>Movimientos de stock</h1>
+
+{% if productos %}
+<form method="post" class="formulario en-linea" id="form-movimiento">
+  <label>Producto
+    <select name="producto_id" id="producto_id" required>
+      {% for p in productos %}
+        <option value="{{ p.id }}" data-stock="{{ p.stock }}">{{ p.sku }} · {{ p.nombre }} (stock {{ p.stock }})</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Tipo
+    <select name="tipo" id="tipo">
+      <option value="entrada">Entrada</option>
+      <option value="salida">Salida</option>
+    </select>
+  </label>
+  <label>Cantidad
+    <input name="cantidad" id="cantidad" type="number" min="1" value="1" required>
+  </label>
+  <label>Motivo
+    <input name="motivo" id="motivo" placeholder="Compra, venta, ajuste...">
+  </label>
+  <button type="submit" class="boton" id="registrar">Registrar</button>
+  <p class="ayuda" id="aviso-stock" hidden></p>
+</form>
+{% else %}
+<p class="vacio">Primero crea algún producto.</p>
+{% endif %}
+
+<table id="tabla-movimientos">
+  <thead><tr><th>Fecha</th><th>Producto</th><th>Tipo</th><th>Cantidad</th><th>Motivo</th></tr></thead>
+  <tbody>
+  {% for m in movimientos %}
+    <tr class="mov-{{ m.tipo }}">
+      <td>{{ m.fecha.strftime("%d/%m/%Y %H:%M") }}</td>
+      <td>{{ m.producto.sku }} · {{ m.producto.nombre }}</td>
+      <td>{{ m.tipo }}</td>
+      <td class="num">{{ m.cantidad }}</td>
+      <td>{{ m.motivo or "—" }}</td>
+    </tr>
+  {% else %}
+    <tr><td colspan="5" class="vacio">Sin movimientos todavía.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

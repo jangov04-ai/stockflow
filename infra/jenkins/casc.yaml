@@ -1,0 +1,122 @@
+# Configuración de Jenkins como código (JCasC).
+# Los valores ${...} se leen de infra/jenkins/.env (no se sube a git).
+jenkins:
+  systemMessage: "Jenkins CI · StockFlow (multibranch + Shared Library + SonarQube)"
+  numExecutors: 4
+  securityRealm:
+    local:
+      allowsSignup: false
+      users:
+        - id: "${JENKINS_ADMIN_ID}"
+          password: "${JENKINS_ADMIN_PASSWORD}"
+  authorizationStrategy:
+    loggedInUsersCanDoAnything:
+      allowAnonymousRead: false
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: NOTIFY_EMAIL
+            value: "${NOTIFY_EMAIL}"
+          - key: SONAR_HOST_URL
+            value: "http://sonarqube:9000"
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - usernamePassword:
+              scope: GLOBAL
+              id: github-token
+              description: "Token de GitHub (leer repos privados y publicar estados de commit)"
+              username: "${GITHUB_USER}"
+              password: "${GITHUB_TOKEN}"
+          - string:
+              scope: GLOBAL
+              id: sonar-token
+              description: "Token de análisis de SonarQube"
+              secret: "${SONAR_TOKEN}"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+    adminAddress: "Jenkins CI <${GMAIL_USER}>"
+  mailer:
+    smtpHost: "smtp.gmail.com"
+    smtpPort: "465"
+    useSsl: true
+    charset: "UTF-8"
+    authentication:
+      username: "${GMAIL_USER}"
+      password: "${GMAIL_APP_PASSWORD}"
+  # Shared Library: vive en el propio repo de StockFlow, carpeta ci/jenkins-lib
+  globalLibraries:
+    libraries:
+      - name: "stockflow-ci-lib"
+        defaultVersion: "main"
+        implicit: false
+        allowVersionOverride: true
+        includeInChangesets: false
+        retriever:
+          modernSCM:
+            libraryPath: "ci/jenkins-lib/"
+            scm:
+              git:
+                remote: "${STOCKFLOW_REPO_URL}"
+                credentialsId: "github-token"
+
+jobs:
+  # Práctica anterior (se mantiene)
+  - script: |
+      pipelineJob('pipeline-ci-repo-privado') {
+        description('Pipeline CI: 1) integración repo privado, 2) compilación y tests, 3) notificación por correo')
+        definition {
+          cpsScm {
+            scm {
+              git {
+                remote {
+                  url('${GITHUB_REPO_URL}')
+                  credentials('github-token')
+                }
+                branch('*/main')
+              }
+            }
+            scriptPath('Jenkinsfile')
+            lightweight(false)
+          }
+        }
+      }
+  # StockFlow: un pipeline por rama (GitFlow)
+  - script: |
+      multibranchPipelineJob('stockflow') {
+        displayName('StockFlow · Multibranch')
+        description('Pipeline por rama: feature/* (rápido), develop (+E2E +Sonar), main/release/* (+empaquetado)')
+        branchSources {
+          branchSource {
+            source {
+              git {
+                id('stockflow-git')
+                remote('${STOCKFLOW_REPO_URL}')
+                credentialsId('github-token')
+                traits {
+                  gitBranchDiscovery()
+                }
+              }
+            }
+          }
+        }
+        factory {
+          workflowBranchProjectFactory {
+            scriptPath('Jenkinsfile')
+          }
+        }
+        triggers {
+          periodicFolderTrigger {
+            interval('2m')
+          }
+        }
+        orphanedItemStrategy {
+          discardOldItems {
+            numToKeep(10)
+          }
+        }
+      }
