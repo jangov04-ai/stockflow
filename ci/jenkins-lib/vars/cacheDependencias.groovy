@@ -22,19 +22,23 @@ def python(String requisitos = 'requirements-dev.txt') {
     String clave = sh(returnStdout: true,
                       script: "cat requirements*.txt | sha256sum | cut -c1-16").trim()
     String destino = "${raiz()}/venv-${clave}"
+    // Un venv no se puede mover (sus scripts apuntan a su ruta), así que se crea
+    // directamente en su sitio. flock evita que dos builds lo creen a la vez y el
+    // fichero .ok marca que la instalación terminó bien.
     sh """
         set -e
         mkdir -p '${raiz()}/pip'
-        if [ -x '${destino}/bin/python' ]; then
-            echo "CACHE HIT  python venv-${clave}"
-        else
-            echo "CACHE MISS python venv-${clave}: instalando dependencias"
-            tmp=\$(mktemp -d '${raiz()}/tmp-venv-XXXX')
-            python3 -m venv "\$tmp"
-            "\$tmp/bin/pip" install --quiet --cache-dir '${raiz()}/pip' -r '${requisitos}'
-            # Renombrado atómico: si otro build lo creó a la vez, nos quedamos con el suyo
-            mv -T "\$tmp" '${destino}' 2>/dev/null || rm -rf "\$tmp"
-        fi
+        flock '${destino}.lock' sh -c '
+            if [ -f "${destino}/.ok" ]; then
+                echo "CACHE HIT  python venv-${clave}"
+            else
+                echo "CACHE MISS python venv-${clave}: instalando dependencias"
+                rm -rf "${destino}"
+                python3 -m venv "${destino}"
+                "${destino}/bin/pip" install --quiet --cache-dir "${raiz()}/pip" -r "${requisitos}"
+                touch "${destino}/.ok"
+            fi
+        '
         rm -rf .venv && ln -s '${destino}' .venv
     """
     return clave
