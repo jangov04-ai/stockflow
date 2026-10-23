@@ -1,4 +1,4 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+from flask import Blueprint, Response, flash, redirect, render_template, request, url_for
 
 from .. import services
 from ..models import Categoria, Movimiento, Producto, db
@@ -112,6 +112,16 @@ def movimientos():
 def categorias():
     return render_template(
         "categorias.html", categorias=Categoria.query.order_by(Categoria.nombre).all()
+    )
+
+
+@web_bp.route("/productos/exportar.csv")
+def exportar_productos():
+    contenido = services.exportar_csv(services.buscar_productos(request.args.get("q", "")))
+    return Response(
+        contenido,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=inventario.csv"},
     )
 
 

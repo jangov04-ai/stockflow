@@ -131,3 +131,21 @@ def test_formularios_web(client):
     )
     assert r.status_code == 302
     assert client.post("/productos/1/eliminar").status_code == 302
+
+
+def test_exportar_csv(client):
+    pid = _crear(client, sku="TEC-001", nombre="Mouse", precio=10).get_json()["id"]
+    _crear(client, sku="PAP-001", nombre="Resma", precio=4, categoria="Papelería")
+    client.post(f"/api/productos/{pid}/movimientos", json={"tipo": "entrada", "cantidad": 3})
+
+    r = client.get("/productos/exportar.csv")
+    assert r.status_code == 200
+    assert r.mimetype == "text/csv"
+    assert "attachment" in r.headers["Content-Disposition"]
+    lineas = r.get_data(as_text=True).lstrip("﻿").strip().splitlines()
+    assert lineas[0] == "sku;nombre;categoria;precio;stock;stock_minimo;valor_total"
+    assert lineas[1] == "TEC-001;Mouse;Tecnología;10.0;3;3;30.0"
+    assert len(lineas) == 3
+
+    filtrado = client.get("/productos/exportar.csv?q=resma").get_data(as_text=True)
+    assert "PAP-001" in filtrado and "TEC-001" not in filtrado
