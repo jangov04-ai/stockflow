@@ -146,12 +146,17 @@ pipeline {
                 }
             }
             steps {
+                // SonarQube Community no analiza ramas: un proyecto por rama
+                // (stockflow-main, stockflow-develop...) para que no se mezclen.
                 withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
                     sh '''
+                        RAMA_SONAR=$(echo "$BRANCH_NAME" | tr '/' '_')
                         .venv/bin/pysonar \
                           --sonar-host-url="$SONAR_HOST_URL" \
                           --sonar-token="$SONAR_TOKEN" \
                           --sonar-project-version="$BUILD_NUMBER" \
+                          -Dsonar.projectKey="stockflow-$RAMA_SONAR" \
+                          -Dsonar.projectName="StockFlow ($BRANCH_NAME)" \
                           -Dsonar.qualitygate.wait=true \
                           -Dsonar.qualitygate.timeout=300
                     '''
